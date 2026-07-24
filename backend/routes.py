@@ -3,6 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
 
 import crud
+from crud import InvalidTransitionError
 from models import Task, TaskCreate, TaskUpdate
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -32,7 +33,10 @@ def get_task(task_id: str):
 
 @router.patch("/{task_id}", response_model=Task)
 def update_task(task_id: str, payload: TaskUpdate):
-    task = crud.update_task(task_id, payload)
+    try:
+        task = crud.update_task(task_id, payload)
+    except InvalidTransitionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
