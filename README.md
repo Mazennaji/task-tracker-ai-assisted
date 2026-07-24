@@ -74,7 +74,7 @@ task-tracker-ai-assisted/
 
 ### Prerequisites
 - Python 3.10+
-- Node.js 18+
+- **Node.js 20+** (required by this version of Next.js — older Node versions will fail to run the frontend)
 - `npm` or `yarn`
 
 ### 1. Clone the repository
