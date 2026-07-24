@@ -6,6 +6,14 @@ from models import Task, TaskCreate, TaskUpdate
 
 _tasks: Dict[str, Task] = {}
 
+INVALID_TRANSITIONS = {
+    ("done", "todo"),
+}
+
+
+class InvalidTransitionError(ValueError):
+    pass
+
 
 def _compute_overdue(task: Task) -> bool:
     if not task.due_date or task.status == "done":
@@ -61,6 +69,12 @@ def update_task(task_id: str, payload: TaskUpdate) -> Optional[Task]:
 
     data = payload.model_dump(exclude_unset=True)
     clear_due_date = data.pop("clear_due_date", False)
+
+    new_status = data.get("status")
+    if new_status is not None and (task.status, new_status) in INVALID_TRANSITIONS:
+        raise InvalidTransitionError(
+            f"cannot move a task from '{task.status}' back to '{new_status}'"
+        )
 
     for key, value in data.items():
         setattr(task, key, value)
