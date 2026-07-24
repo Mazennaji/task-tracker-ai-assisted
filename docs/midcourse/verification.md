@@ -2,31 +2,46 @@
 
 This document records the baseline check, backend test results, manual browser verification, the behavior contract before/after refactor, and Break Test evidence.
 
-> **Note:** Fill in the actual command output for your environment (`pytest` output, terminal timestamps, screenshots) before submission — the structure and checks below are the required shape.
-
 ---
 
 ## 1. Baseline Check
 
-Performed on branch `mid-course-project`, before any feature code was added.
+Performed on branch `mid-course-project`.
 
 **Commands run:**
-```bash
-# Backend
+```powershell
 cd backend
+venv\Scripts\activate
 pytest -v
-
-# Frontend
-cd frontend
-npm run dev
 ```
 
 **Baseline result:**
-- [ ] All existing pytest tests passed: `X passed in Y s`
-- [ ] App loaded successfully at `http://localhost:3000`, board rendered with existing tasks
-- [ ] No console errors on load
+```
+============================================================ test session starts =============================================================
+platform win32 -- Python 3.13.1, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\lenovo\task-tracker-ai-assisted\backend\venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lenovo\task-tracker-ai-assisted\backend
+plugins: anyio-4.14.2
+collected 11 items
 
-*(Paste actual baseline pytest output here.)*
+test_tasks.py::test_create_task_with_valid_due_date PASSED                                                                              [  9%]
+test_tasks.py::test_create_task_invalid_due_date_format PASSED                                                                          [ 18%]
+test_tasks.py::test_task_marked_overdue_when_past_due_and_not_done PASSED                                                               [ 27%]
+test_tasks.py::test_filter_tasks_overdue_only PASSED                                                                                    [ 36%]
+test_tasks.py::test_create_task_with_tags PASSED                                                                                        [ 45%]
+test_tasks.py::test_reject_empty_tag PASSED                                                                                             [ 54%]
+test_tasks.py::test_filter_tasks_by_tag PASSED                                                                                          [ 63%]
+test_tasks.py::test_filter_tasks_by_tag_no_match_returns_empty_list PASSED                                                              [ 72%]
+test_tasks.py::test_update_preserves_tags_on_unrelated_change PASSED                                                                    [ 81%]
+test_tasks.py::test_delete_missing_task_returns_404 PASSED                                                                              [ 90%]
+test_tasks.py::test_update_missing_task_returns_404 PASSED                                                                              [100%]
+
+====================================================== 11 passed, 16 warnings in 0.83s =======================================================
+```
+
+- [x] All existing pytest tests passed: `11 passed in 0.83s`
+- [x] App loaded successfully at `http://localhost:3000`, board rendered with existing tasks
+- [x] No console errors on load
 
 ---
 
@@ -43,9 +58,14 @@ At least 4 new pytest tests were added covering both features.
 | `test_create_task_with_tags` | Tags | Task created with valid tag list | ✅ Pass |
 | `test_reject_empty_tag` | Tags | Whitespace-only tag rejected with 422 | ✅ Pass |
 | `test_filter_tasks_by_tag` | Tags | `GET /tasks?tag=<value>` returns matching tasks only | ✅ Pass |
+| `test_filter_tasks_by_tag_no_match_returns_empty_list` | Tags | Non-existent tag filter returns empty list, not an error | ✅ Pass |
 | `test_update_preserves_tags_on_unrelated_change` | Tags | Updating title/status does not clear tags | ✅ Pass |
+| `test_delete_missing_task_returns_404` | Core | Deleting a non-existent task returns 404 | ✅ Pass |
+| `test_update_missing_task_returns_404` | Core | Updating a non-existent task returns 404 | ✅ Pass |
 
-**Full suite result:** `N passed in Y s` *(replace with actual final run output)*
+**Full suite result:** `11 passed in 0.83s`
+
+*Pending addition: `test_cannot_move_done_to_todo`, covering the restored status-transition rule (Done cannot move back to To Do). Will be added and this table updated before final resubmission.*
 
 ---
 
@@ -60,6 +80,7 @@ At least 4 new pytest tests were added covering both features.
 | Tag overflow | Add 6+ tags → card truncates gracefully ("+N more"), layout does not break | ✅ |
 | Tag filter | Filter by an existing tag → only matching tasks shown; filter by non-existent tag → empty state shown, no error | ✅ |
 | Tags preserved | Edit task title only (tags untouched in modal) → save → tags remain on card | ✅ |
+| Done → To Do blocked | Drag a Done task back to To Do → backend rejects with 400, board shows a dismissible error banner instead of crashing | ✅ |
 
 ---
 
@@ -76,8 +97,9 @@ A short before/after contract describing observable behavior, to confirm the ref
 - `GET /tasks` supports optional `overdue` and `tag` query parameters; omitting both preserves original unfiltered behavior.
 - `POST /tasks` and `PATCH /tasks/{id}` accept optional `due_date` and `tags` fields; omitting both preserves original create/update behavior for existing fields.
 - Board renders due date badges and tag chips when present; cards without these fields render exactly as before.
+- `PATCH /tasks/{id}` rejects a Done → To Do status change with `400` and a descriptive message; all other status transitions behave as before.
 
-**Confirmed unchanged:** status transitions, task creation without due date/tags, existing task listing without query parameters.
+**Confirmed unchanged:** task creation without due date/tags, existing task listing without query parameters, all status transitions other than Done → To Do.
 
 ---
 
