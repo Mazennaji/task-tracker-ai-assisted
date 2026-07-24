@@ -16,6 +16,7 @@ export default function Home() {
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   async function loadTasks() {
     setLoading(true);
@@ -30,6 +31,12 @@ export default function Home() {
   useEffect(() => {
     loadTasks();
   }, []);
+
+  useEffect(() => {
+    if (!statusError) return;
+    const timeout = setTimeout(() => setStatusError(null), 4000);
+    return () => clearTimeout(timeout);
+  }, [statusError]);
 
   const availableTags = useMemo(() => {
     const set = new Set<string>();
@@ -88,8 +95,12 @@ export default function Home() {
   async function handleStatusChange(taskId: string, status: TaskStatus) {
     const current = tasks.find((t) => t.id === taskId);
     if (!current || current.status === status) return;
-    await updateTask(taskId, { status });
-    await loadTasks();
+    try {
+      await updateTask(taskId, { status });
+      await loadTasks();
+    } catch (error) {
+      setStatusError(error instanceof Error ? error.message : "Could not update task status");
+    }
   }
 
   return (
@@ -104,6 +115,14 @@ export default function Home() {
         onOverdueToggle={() => setOverdueOnly(!overdueOnly)}
         availableTags={availableTags}
       />
+
+      {statusError && (
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mt-4 rounded border border-red-400 bg-red-50 px-4 py-2 font-mono text-sm text-red-700">
+            {statusError}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="mx-auto max-w-6xl px-6 py-16 text-center font-mono text-sm text-paper-dim">
