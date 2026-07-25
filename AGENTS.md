@@ -1,29 +1,42 @@
 # Codex Instructions
 
+## Project summary
+
+Task Tracker is a learning-project Kanban board with a FastAPI API and a Next.js frontend. It supports task creation, updates, deletion, status grouping, optional due dates with overdue filtering, and free-form tags. The current storage is an in-memory dictionary; no durable persistence is implemented.
+
 ## Stack and commands
 
-- Backend: FastAPI/Python in `backend/`; frontend: Next.js/React/TypeScript in `frontend/`.
-- Install backend dependencies: `cd backend; python -m venv venv; venv\\Scripts\\Activate.ps1; pip install -r requirements.txt`.
-- Run the API: `cd backend; uvicorn main:app --reload` (http://localhost:8000; docs at `/docs`).
-- Run backend tests: `cd backend; pytest -v`.
-- Install and run the frontend: `cd frontend; npm install; npm run dev` (http://localhost:3000).
-- Frontend checks: `cd frontend; npm run lint` and, when relevant, `npm run build`.
+- Backend: Python, FastAPI, Pydantic, and pytest in `backend/`.
+- Frontend: Next.js, React, TypeScript, and ESLint in `frontend/`.
+- Install backend dependencies: `cd backend; pip install -r requirements.txt`
+- Run the API: `cd backend; uvicorn main:app --reload`
+- Run backend tests: `cd backend; pytest -v`
+- Install frontend dependencies: `cd frontend; npm install`
+- Run the frontend: `cd frontend; npm run dev`
+- Run frontend linting: `cd frontend; npm run lint`
+- Build the frontend: `cd frontend; npm run build`
 
-## Project rules
+## Business rules
 
-- Keep task status values exactly `todo`, `in_progress`, or `done`; a task cannot move from `done` back to `todo`.
-- Due dates are optional ISO dates. A task is overdue only when its due date is before today and its status is not `done`; compute this at read time.
-- Tags are free-form, trimmed, non-empty strings; permit at most 10 tags per task and 30 characters per tag. Preserve tags on unrelated updates.
-- Put API models and validation in `backend/models.py`, routes in `backend/routes.py`, and task behavior in `backend/crud.py`. Put frontend components in `frontend/src/components/` and shared frontend helpers/types in `frontend/src/lib/`.
-- This is a learning project: do not add production authentication, persistence infrastructure, background jobs, bulk operations, saved views, or tag autocomplete unless explicitly requested.
+- Valid task statuses are exactly `todo`, `in_progress`, and `done`.
+- A task cannot transition from `done` to `todo`.
+- Title is required and must be 1–200 characters. Description is optional and limited to 2,000 characters.
+- Due dates are optional ISO date values. A task is overdue only when its due date is before today and its status is not `done`; overdue status is computed when tasks are read.
+- Tags are free-form strings. Each tag is trimmed, cannot be empty or whitespace-only, has a 30-character maximum, and a task can have at most 10 tags.
+- Tag filtering is case-insensitive. Updating unrelated fields must preserve tags unless tags are explicitly supplied.
+- Task priority: not confirmed; no priority field or rule is visible in the inspected code.
 
-## Module 5 boundaries
+## Module 5 guardrails
 
-- Prefer read-only analysis. For required changes, edit or add documentation under `docs/`.
-- Do not change `backend/` or `frontend/` for Module 5 work. Flag unexpected app changes and ask before making them.
+- Work docs-first and read-only by default.
+- Use one clearly scoped task per Codex thread.
+- For Module 5, make required edits in `docs/` first.
+- Do not change application code unless explicitly approved. This repository has no `app/` directory; treat `backend/` and `frontend/` as application code.
+- Flag unexpected application changes, broadened scope, new dependencies, or data-model changes before proceeding.
 
-## Review expectations
+## Security and governance
 
-- Cite the files you inspected; do not invent project structure or behavior.
-- Ask before broad edits, new dependencies, or changes outside the requested scope.
-- Explain the proposed diff and run the smallest relevant verification available.
+- Never paste, log, commit, or expose secrets, tokens, credentials, or `.env` contents.
+- Do not run destructive commands or discard user changes without explicit approval.
+- Cite the files inspected for conclusions and distinguish facts from assumptions.
+- Do not invent commands, architecture, requirements, test results, or business rules. Mark unverified items as **not confirmed**.
