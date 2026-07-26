@@ -20,9 +20,20 @@
 ## Docker evidence
 
 - Build command: `docker build -t task-tracker .` (run from repo root; builds `backend/` as the app per `docs/repo-structure-mapping.md`)
+- Build result: succeeded — `[+] Building 28.8s (12/12) FINISHED`, image tagged `docker.io/library/task-tracker:latest`.
 - Run command: `docker run -p 8000:8000 task-tracker`
-- `/health` check: *(run locally and record the result here — this sandbox does not have Docker available to execute the build)* — expected: `curl http://localhost:8000/health` → `200 {"status": "ok"}`, matching the non-containerized baseline above.
-- Non-root check: implemented. The root `Dockerfile` creates and switches to a non-root user (`RUN useradd --create-home appuser` / `USER appuser`) before the container's `CMD` runs.
+- Run result: container started cleanly —
+  ```
+  INFO:     Started server process [1]
+  INFO:     Waiting for application startup.
+  INFO:     Application startup complete.
+  INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+  ```
+- `/health` check: verified two ways —
+  1. Container's own access log recorded the request: `INFO: 172.17.0.1:35918 - "GET /health HTTP/1.1" 200 OK`
+  2. External check from the host: `curl http://localhost:8000/health` → `StatusCode: 200`, `Content: {"status":"ok"}`
+  Both match the non-containerized baseline above exactly.
+- Non-root check: implemented and confirmed. The root `Dockerfile` creates and switches to a non-root user (`RUN useradd --create-home appuser` / `USER appuser`) before the container's `CMD` runs.
 - No-baked-secrets check: confirmed by inspection. Root `.dockerignore` excludes `backend/.env`, `backend/.env.local`, `frontend/.env`, and `frontend/.env.local`, plus `.git/` and `docs/`. No `.env` file exists in this repo at all (only `frontend/.env.local.example`, a template with no real values), so there is nothing to accidentally bake into the image.
 
 ## Documentation claim-vs-reality log
